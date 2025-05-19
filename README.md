@@ -15,4 +15,4 @@ Anal.nvim is a reminder of **long-time-sitting.**
 
 ## Usage
 
-Install anal.nvim, you'll get a perodical reminding of "stand up! relax your anal".
+Install anal.nvim, you'll get a perodical reminding of "Stand up! Relax your anal sphincter!".
