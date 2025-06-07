@@ -1,24 +1,29 @@
 local M = {}
 
+local vim = vim
+
+local blockwin = require("anal.blockwin")
+
 function M.setup(opt)
   if not opt or next(opt) == nil then
     opt = {}
-    opt.interval = 3 --seconds
+    opt.interval = 3 -- seconds
   end
 
   M.start(opt.interval)
 end
 
 function M.start(interval)
+  local ms = interval * 1000
   local timer = vim.uv.new_timer()
   timer:start(
-    interval * 1000,
-    0,
+    ms,
+    ms,
     vim.schedule_wrap(function()
-      print("Stand up! Relax your anal sphincter!")
+      -- close win before next event
+      blockwin.open_blockwin(interval - 1)
     end)
   )
-  --TODO: impl
 end
 
 return M
