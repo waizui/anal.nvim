@@ -2,12 +2,12 @@ local M = {}
 
 local vim = vim
 
-local blockwin = require("anal.blockwin")
+local BlockWin = require("anal.blockwin")
 
 function M.setup(opt)
   if not opt or next(opt) == nil then
     opt = {}
-    opt.interval = 3 -- seconds
+    opt.interval = 1800 -- seconds
   end
 
   M.start(opt.interval)
@@ -21,9 +21,10 @@ function M.start(interval)
     ms,
     vim.schedule_wrap(function()
       -- close win before next event
-      blockwin.open_blockwin(interval - 1)
+      BlockWin.open_blockwin(interval - 1)
     end)
   )
 end
+
 
 return M
