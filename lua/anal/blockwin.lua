@@ -35,7 +35,7 @@ function BlockWin.open_blockwin(cd)
 
   local buf = vim.api.nvim_create_buf(false, true)
 
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "Stand up! Relax your anal sphincter!" })
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "Stand up, Time to relax your anus!" })
 
   local ui = vim.api.nvim_list_uis()[1]
   local editor_width = ui.width
