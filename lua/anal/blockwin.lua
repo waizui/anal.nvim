@@ -2,7 +2,37 @@ local BlockWin = {}
 
 local vim = vim
 
+function BlockWin.start(interval, display_time)
+  if BlockWin.cur_timer and BlockWin.cur_timer:is_active() then
+    BlockWin.cur_timer:stop()
+    BlockWin.cur_timer:close()
+    BlockWin.cur_timer = nil
+  end
+
+  local dalay_ms = interval * 1000
+  local interval_ms = (interval + display_time) * 1000
+  local timer = vim.uv.new_timer()
+  timer:start(
+    dalay_ms,  -- delay
+    interval_ms, -- interbal
+    vim.schedule_wrap(function()
+      BlockWin.open_blockwin(math.max(1, display_time))
+    end)
+  )
+  BlockWin.cur_timer = timer
+end
+
 function BlockWin.open_blockwin(cd)
+  if BlockWin.cur_win and vim.api.nvim_win_is_valid(BlockWin.cur_win) then
+    pcall(vim.api.nvim_win_close, BlockWin.cur_win, true)
+    BlockWin.cur_win = nil
+  end
+
+  if BlockWin.cur_buf and vim.api.nvim_buf_is_valid(BlockWin.cur_buf) then
+    pcall(vim.api.nvim_buf_delete, BlockWin.cur_buf, { force = true })
+    BlockWin.cur_buf = nil
+  end
+
   local buf = vim.api.nvim_create_buf(false, true)
 
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "Stand up! Relax your anal sphincter!" })
@@ -30,6 +60,8 @@ function BlockWin.open_blockwin(cd)
 
   local win = vim.api.nvim_open_win(buf, true, opts)
   BlockWin.start_win_loop(buf, win, cd)
+  BlockWin.cur_buf = buf
+  BlockWin.cur_win = win
 end
 
 function BlockWin.start_win_loop(buf, win, cd)
@@ -56,7 +88,6 @@ function BlockWin.start_win_loop(buf, win, cd)
       -- Clean up resources
       timer:stop()
       timer:close()
-
 
       -- Clean up autocommand group
       pcall(vim.api.nvim_del_augroup_by_name, "CountdownLock")
