@@ -29,87 +29,7 @@ function BlockWin.open_blockwin(cd)
   }
 
   local win = vim.api.nvim_open_win(buf, true, opts)
-  BlockWin.lock_win(buf, win)
   BlockWin.start_win_loop(buf, win, cd)
-end
-
----@param b boolean
-function BlockWin.validate_keys(buf, b)
-  if b then
-    -- abbreviations to intercept quit commands
-    vim.cmd("cabbrev q lua require('anal').blocked_q()<CR>")
-    vim.cmd("cabbrev quit lua require('anal').blocked_q()<CR>")
-    vim.cmd("cabbrev wq lua require('anal').blocked_q()<CR>")
-    vim.cmd("cabbrev x lua require('anal').blocked_q()<CR>")
-
-    -- Disable key mappings
-    vim.api.nvim_buf_set_keymap(
-      buf,
-      "n",
-      "q",
-      ":lua require('anal').blocked_q()<CR>",
-      { noremap = true, silent = true }
-    )
-    vim.api.nvim_buf_set_keymap(
-      buf,
-      "n",
-      "<C-c>",
-      ":lua require('anal').blocked_q()<CR>",
-      { noremap = true, silent = true }
-    )
-    vim.api.nvim_buf_set_keymap(
-      buf,
-      "n",
-      "ZZ",
-      ":lua require('anal').blocked_q()<CR>",
-      { noremap = true, silent = true }
-    )
-    vim.api.nvim_buf_set_keymap(
-      buf,
-      "n",
-      "ZQ",
-      ":lua require('anal').blocked_q()<CR>",
-      { noremap = true, silent = true }
-    )
-  else
-    -- Clear abbreviations
-    pcall(vim.cmd, "cunabbrev q")
-    pcall(vim.cmd, "cunabbrev quit")
-    pcall(vim.cmd, "cunabbrev wq")
-    pcall(vim.cmd, "cunabbrev x")
-
-    -- Clean up keymaps
-    pcall(vim.api.nvim_buf_del_keymap, buf, "n", "q")
-    pcall(vim.api.nvim_buf_del_keymap, buf, "n", "<C-c>")
-    pcall(vim.api.nvim_buf_del_keymap, buf, "n", "ZZ")
-    pcall(vim.api.nvim_buf_del_keymap, buf, "n", "ZQ")
-  end
-end
-
-function BlockWin.lock_win(buf, win)
-  vim.api.nvim_buf_set_option(buf, "modifiable", false)
-  vim.api.nvim_buf_set_option(buf, "bufhidden", "wipe")
-  vim.api.nvim_buf_set_option(buf, "buftype", "nofile")
-  vim.api.nvim_buf_set_option(buf, "swapfile", false)
-
-  BlockWin.validate_keys(buf, false)
-
-  local augroup = vim.api.nvim_create_augroup("CountdownLock", { clear = true })
-
-  -- Force user back if they try to switch windows
-  vim.api.nvim_create_autocmd("WinLeave", {
-    group = augroup,
-    buffer = buf,
-    callback = function()
-      if vim.api.nvim_win_is_valid(win) then
-        vim.api.nvim_set_current_win(win)
-      end
-    end,
-  })
-end
-
-function BlockWin.blocked_q()
-  vim.api.nvim_echo({ { "Window is locked until countdown ends!", "WarningMsg" } }, true, {})
 end
 
 function BlockWin.start_win_loop(buf, win, cd)
@@ -137,7 +57,6 @@ function BlockWin.start_win_loop(buf, win, cd)
       timer:stop()
       timer:close()
 
-      BlockWin.validate_keys(buf, true)
 
       -- Clean up autocommand group
       pcall(vim.api.nvim_del_augroup_by_name, "CountdownLock")

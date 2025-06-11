@@ -20,11 +20,9 @@ function M.start(interval)
     ms,
     ms,
     vim.schedule_wrap(function()
-      -- close win before next event
-      BlockWin.open_blockwin(interval - 1)
+      BlockWin.open_blockwin(math.min(interval - 1, 300))
     end)
   )
 end
-
 
 return M
