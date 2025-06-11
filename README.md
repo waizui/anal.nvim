@@ -4,6 +4,8 @@
 
 Anal.nvim is a reminder of **long-time-sitting.**
 
+![preview](./pic.png)
+
 ## Install
 
 Using Lazy:
