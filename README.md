@@ -6,13 +6,22 @@ Anal.nvim is a reminder of **long-time-sitting.**
 
 ## Install
 
+Using Lazy:
+
+
 ```lua
 {
    "waizui/anal.nvim",
-   opts = { interval = 1800 }
 },
 ```
 
 ## Usage
 
-Install anal.nvim, you'll get a perodical reminding of "Stand up! Relax your anal sphincter!".
+In command mode:
+
+```txt
+:Anal [interval] [display time]
+```
+interval: time in seconds to wait before showing the message (default: 1800)
+display time: time in seconds to display the message (default: 300)
+
