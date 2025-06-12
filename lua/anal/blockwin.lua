@@ -2,27 +2,32 @@ local BlockWin = {}
 
 local vim = vim
 
-function BlockWin.start(interval, display_time)
+---@param opts Options
+function BlockWin.start(opts)
   if BlockWin.cur_timer and BlockWin.cur_timer:is_active() then
     BlockWin.cur_timer:stop()
     BlockWin.cur_timer:close()
     BlockWin.cur_timer = nil
   end
 
+  local interval, display_time = opts.interval, opts.display_time
+
   local dalay_ms = interval * 1000
   local interval_ms = (interval + display_time) * 1000
   local timer = vim.uv.new_timer()
   timer:start(
     dalay_ms,  -- delay
-    interval_ms, -- interbal
+    interval_ms, -- interval
     vim.schedule_wrap(function()
-      BlockWin.open_blockwin(math.max(1, display_time))
+      BlockWin.open_blockwin(opts)
     end)
   )
   BlockWin.cur_timer = timer
 end
 
-function BlockWin.open_blockwin(cd)
+---@param opts Options
+function BlockWin.open_blockwin(opts)
+  local cd = math.max(1, opts.display_time)
   if BlockWin.cur_win and vim.api.nvim_win_is_valid(BlockWin.cur_win) then
     pcall(vim.api.nvim_win_close, BlockWin.cur_win, true)
     BlockWin.cur_win = nil
@@ -35,7 +40,8 @@ function BlockWin.open_blockwin(cd)
 
   local buf = vim.api.nvim_create_buf(false, true)
 
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "Stand up, Time to relax your anus!" })
+  -- show reminding text
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { opts.text })
 
   local ui = vim.api.nvim_list_uis()[1]
   local editor_width = ui.width
@@ -79,7 +85,7 @@ function BlockWin.start_win_loop(buf, win, cd)
     vim.api.nvim_buf_set_option(buf, "modifiable", true)
     vim.api.nvim_buf_set_lines(buf, 1, -1, false, {
       "",
-      string.format("Rest for %d seconds", left_t),
+      string.format("Rest your anus for %d seconds", left_t),
       "",
     })
     vim.api.nvim_buf_set_option(buf, "modifiable", false)

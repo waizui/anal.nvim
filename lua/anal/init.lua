@@ -3,48 +3,24 @@ local M = {}
 local vim = vim
 
 local BlockWin = require("anal.blockwin")
+local Config = require("anal.config")
 
 function M.setup()
-  local config = M.read_options()
-
   M.reg_command()
-  M.start(config.interval, config.display_time)
+  local opts = Config.read()
+  M.start(opts)
 end
 
-function M.save_options(interval, display_time)
-  local config = {
-    interval = interval or 1800,
-    display_time = display_time or 300,
-  }
-
-  local file = io.open(vim.fn.stdpath("data") .. "/anal_config.lua", "w")
-  if file then
-    file:write("return " .. vim.inspect(config))
-    file:close()
-  end
-end
-
-function M.read_options()
-  local ok, saved = pcall(dofile, vim.fn.stdpath("data") .. "/anal_config.lua")
-  if ok then
-    return saved
-  end
-
-  return {
-    interval = 1800,
-    display_time = 300,
-  }
-end
-
-function M.start(interval, display_time)
-  M.save_options(interval, display_time)
-  BlockWin.start(interval, display_time)
+---@param opts Options
+function M.start(opts)
+  Config.save(opts)
+  BlockWin.start(opts)
 end
 
 function M.reg_command()
   -- register command with params
-  vim.api.nvim_create_user_command("Anal", function(opts)
-    if opts.fargs[1] == "help" then
+  vim.api.nvim_create_user_command("Anal", function(args)
+    if args.fargs[1] == "help" then
       vim.api.nvim_echo({
         { "Anal command usage:",             "WarningMsg" },
         { ":Anal [interval] [display_time]", "Comment" },
@@ -60,10 +36,33 @@ function M.reg_command()
 
       return
     end
+    if args.fargs[1] == "text" then
+      local opts = Config.read()
+      local txt = table.concat(args.fargs, " ", 2)
+      if txt ~= nil and txt ~= "" then
+        opts.text = txt
+      else
+        opts.text = Config.default().text
+      end
 
-    local interval = opts.fargs[1] or 1800
-    local display_time = opts.fargs[2] or 300
-    M.start(interval, display_time)
+      M.start(opts)
+      return
+    end
+
+    if #args.fargs == 2 then
+      -- check if args like `:Anal 1800 300`
+      local interval, display_time = tonumber(args.fargs[1]), tonumber(args.fargs[2])
+      if interval == nil or display_time == nil then
+        return
+      end
+
+      local opts = Config.read()
+      opts.interval = interval
+      opts.display_time = display_time
+
+      M.start(opts)
+      return
+    end
   end, {
     nargs = "*",
     complete = function(_, _, _)
