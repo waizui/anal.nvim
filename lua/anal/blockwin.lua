@@ -38,6 +38,7 @@ end
 function BlockWin.start_win_loop(buf, cd)
   local left_t = cd
   local timer = vim.uv.new_timer()
+  local win = BlockWin.create_win(buf)
 
   local function update()
     -- Check if buffer and window are still valid
@@ -47,7 +48,6 @@ function BlockWin.start_win_loop(buf, cd)
       return
     end
 
-    local win = BlockWin.create_win(buf)
     local text = string.format("Rest your anus for %d seconds", left_t)
     BlockWin.change_text(buf, text)
 
