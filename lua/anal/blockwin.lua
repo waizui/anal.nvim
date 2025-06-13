@@ -28,20 +28,60 @@ end
 ---@param opts Options
 function BlockWin.open_blockwin(opts)
   local cd = math.max(1, opts.display_time)
-  if BlockWin.cur_win and vim.api.nvim_win_is_valid(BlockWin.cur_win) then
-    pcall(vim.api.nvim_win_close, BlockWin.cur_win, true)
-    BlockWin.cur_win = nil
+  local buf = BlockWin.create_buf()
+  -- show reminding text
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { opts.text })
+
+  BlockWin.start_win_loop(buf, cd)
+end
+
+function BlockWin.start_win_loop(buf, cd)
+  local left_t = cd
+  local timer = vim.uv.new_timer()
+
+  local function update()
+    -- Check if buffer and window are still valid
+    if not vim.api.nvim_buf_is_valid(buf) then
+      timer:stop()
+      timer:close()
+      return
+    end
+
+    local win = BlockWin.create_win(buf)
+    local text = string.format("Rest your anus for %d seconds", left_t)
+    BlockWin.change_text(buf, text)
+
+    if left_t <= 0 then
+      -- Clean up resources
+      timer:stop()
+      timer:close()
+      -- close window
+      pcall(vim.api.nvim_win_close, win, true)
+      return
+    end
+
+    left_t = left_t - 1
   end
 
+  timer:start(0, 1000, vim.schedule_wrap(update))
+end
+
+function BlockWin.create_buf()
   if BlockWin.cur_buf and vim.api.nvim_buf_is_valid(BlockWin.cur_buf) then
     pcall(vim.api.nvim_buf_delete, BlockWin.cur_buf, { force = true })
     BlockWin.cur_buf = nil
   end
 
   local buf = vim.api.nvim_create_buf(false, true)
+  BlockWin.cur_buf = buf
+  return buf
+end
 
-  -- show reminding text
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { opts.text })
+function BlockWin.create_win(buf)
+  if BlockWin.cur_win and vim.api.nvim_win_is_valid(BlockWin.cur_win) then
+    pcall(vim.api.nvim_win_close, BlockWin.cur_win, true)
+    BlockWin.cur_win = nil
+  end
 
   local ui = vim.api.nvim_list_uis()[1]
   local editor_width = ui.width
@@ -65,47 +105,20 @@ function BlockWin.open_blockwin(opts)
   }
 
   local win = vim.api.nvim_open_win(buf, true, opts)
-  BlockWin.start_win_loop(buf, win, cd)
-  BlockWin.cur_buf = buf
   BlockWin.cur_win = win
+  return win
 end
 
-function BlockWin.start_win_loop(buf, win, cd)
-  local left_t = cd
-  local timer = vim.uv.new_timer()
+function BlockWin.change_text(buf, text)
+  vim.api.nvim_buf_set_option(buf, "modifiable", true)
+  vim.api.nvim_buf_set_lines(buf, 1, -1, false, { text })
+  vim.api.nvim_buf_set_option(buf, "modifiable", false)
+end
 
-  local function update()
-    -- Check if buffer and window are still valid
-    if not vim.api.nvim_buf_is_valid(buf) or not vim.api.nvim_win_is_valid(win) then
-      timer:stop()
-      timer:close()
-      return
-    end
-
-    vim.api.nvim_buf_set_option(buf, "modifiable", true)
-    vim.api.nvim_buf_set_lines(buf, 1, -1, false, {
-      "",
-      string.format("Rest your anus for %d seconds", left_t),
-      "",
-    })
-    vim.api.nvim_buf_set_option(buf, "modifiable", false)
-
-    if left_t <= 0 then
-      -- Clean up resources
-      timer:stop()
-      timer:close()
-
-      -- Clean up autocommand group
-      pcall(vim.api.nvim_del_augroup_by_name, "CountdownLock")
-      -- Close the window safely
-      pcall(vim.api.nvim_win_close, win, true)
-      return
-    end
-
-    left_t = left_t - 1
+function BlockWin.hide_win(buf, win)
+  if vim.api.nvim_win_is_valid(win) then
+    pcall(vim.api.nvim_win_close, win, true)
   end
-
-  timer:start(0, 1000, vim.schedule_wrap(update))
 end
 
 return BlockWin
