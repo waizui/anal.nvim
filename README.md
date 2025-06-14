@@ -21,14 +21,14 @@ Using Lazy:
 
 In command mode:
 
-set reminding interval and display time:
+**Set reminding interval and display time:**
 ```txt
 :Anal [interval] [display time]
 ```
 interval: time in seconds to wait before showing the message (default: 1800)
 display time: time in seconds to display the message (default: 300)
 
-set reminding text:
+**Set reminding text:**
 ```txt
 :Anal text [whatever you put]
 ```
@@ -40,3 +40,8 @@ you will get:
 
 ![text](./text.png)
 
+**Switch naughty mode:**
+```txt
+:Anal naughty
+```
+when naughty mode is set, reminding window will flash, force you to away from keyboard. 

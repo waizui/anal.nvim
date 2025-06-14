@@ -36,6 +36,8 @@ function M.reg_command()
 
       return
     end
+
+    -- change text
     if args.fargs[1] == "text" then
       local opts = Config.read()
       local txt = table.concat(args.fargs, " ", 2)
@@ -44,6 +46,16 @@ function M.reg_command()
       else
         opts.text = Config.default().text
       end
+
+      M.start(opts)
+      return
+    end
+
+    -- use naughty mode
+    if args.fargs[1] == "naughty" then
+      local opts = Config.read()
+      -- flip 1, 0
+      opts.naughty = 1 - opts.naughty
 
       M.start(opts)
       return
